@@ -1,0 +1,93 @@
+openapi: 3.0.0
+info:
+  title: Github Checker
+  description: Simple API to check user repositories
+  version: 0.0.1
+paths:
+  /user/{username}/repositories:
+    get:
+      summary: Returns a list or repositories without forks
+      parameters:
+        - $ref: '#/components/parameters/Accept'
+        - $ref: '#/components/parameters/Username'
+      responses:
+        '200':
+          $ref: '#/components/responses/UserRepositoriesResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '406':
+          $ref: '#/components/responses/NotAcceptable'
+components:
+  parameters:
+    Accept:
+      name: Accept
+      in: header
+      required: true
+      schema:
+        type: string
+        enum:
+          - application/json
+          - application/xml
+    Username:
+      name: username
+      in: path
+      required: true
+      schema:
+        type: string
+
+  responses:
+    # Errors
+    NotFound:
+      description: Not found user
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotAcceptable:
+      description: Not accepatable media type
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    # Responses
+    UserRepositoriesResponse:
+      description: Returns list of user repositories
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Repositories'
+
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        Message: #TODO: dear God please ask them to keep same convention for all properties ;)
+          type: string
+
+    Repositories:
+      type: array
+      items:
+        $ref: '#/components/schemas/Repository'
+
+    Repository:
+      type: object
+      properties:
+        repositoryName:
+          type: string
+        ownerLogin:
+          type: string
+        branches:
+          type: array
+          items:
+            $ref: '#/components/schemas/Branch'
+
+    Branch:
+      type: object
+      properties:
+        name:
+          type: string
+        lastCommitSha:
+          type: string
