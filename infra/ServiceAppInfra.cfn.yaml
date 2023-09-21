@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: 2010-09-09
 
 Description: API to ECS integration
 
@@ -10,13 +10,13 @@ Parameters:
 Mappings:
   SubnetConfig:
     VPC:
-      CIDR: '10.0.0.0/16'
+      CIDR: 10.0.0.0/16
     Public:
-      CIDR: '10.0.0.0/24'
+      CIDR: 10.0.0.0/24
     Private0:
-      CIDR: '10.0.100.0/24'
+      CIDR: 10.0.100.0/24
     Private1:
-      CIDR: '10.0.101.0/24'
+      CIDR: 10.0.101.0/24
 
 Resources:
 
@@ -27,16 +27,16 @@ Resources:
   VPC:
     Type: AWS::EC2::VPC
     Properties:
-      CidrBlock: !FindInMap [ 'SubnetConfig', 'VPC', 'CIDR' ]
+      CidrBlock: !FindInMap [ SubnetConfig, VPC, CIDR ]
 
   PublicSubnet:
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: !Select
         - 0
-        - Fn::GetAZs: !Ref 'AWS::Region'
-      VpcId: !Ref 'VPC'
-      CidrBlock: !FindInMap [ 'SubnetConfig', 'Public', 'CIDR' ]
+        - Fn::GetAZs: !Ref AWS::Region
+      VpcId: !Ref VPC
+      CidrBlock: !FindInMap [ SubnetConfig, Public, CIDR ]
       MapPublicIpOnLaunch: true
 
   PrivateSubnet0:
@@ -44,17 +44,17 @@ Resources:
     Properties:
       AvailabilityZone: !Select
         - 0
-        - Fn::GetAZs: !Ref 'AWS::Region'
-      VpcId: !Ref 'VPC'
-      CidrBlock: !FindInMap [ 'SubnetConfig', 'Private0', 'CIDR' ]
+        - Fn::GetAZs: !Ref AWS::Region
+      VpcId: !Ref VPC
+      CidrBlock: !FindInMap [ SubnetConfig, Private0, CIDR ]
   PrivateSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
       AvailabilityZone: !Select
         - 1
-        - Fn::GetAZs: !Ref 'AWS::Region'
-      VpcId: !Ref 'VPC'
-      CidrBlock: !FindInMap [ 'SubnetConfig', 'Private1', 'CIDR' ]
+        - Fn::GetAZs: !Ref AWS::Region
+      VpcId: !Ref VPC
+      CidrBlock: !FindInMap [ SubnetConfig, Private1, CIDR ]
 
   InternetGateway:
     Type: AWS::EC2::InternetGateway
@@ -62,20 +62,20 @@ Resources:
   GatewayAttachement:
     Type: AWS::EC2::VPCGatewayAttachment
     Properties:
-      VpcId: !Ref 'VPC'
-      InternetGatewayId: !Ref 'InternetGateway'
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
 
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
-      VpcId: !Ref 'VPC'
+      VpcId: !Ref VPC
   PublicRoute:
     Type: AWS::EC2::Route
     DependsOn: GatewayAttachement
     Properties:
-      RouteTableId: !Ref 'PublicRouteTable'
-      DestinationCidrBlock: '0.0.0.0/0'
-      GatewayId: !Ref 'InternetGateway'
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
 
   PublicSubnetRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
@@ -98,7 +98,7 @@ Resources:
   PrivateRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
-      VpcId: !Ref 'VPC'
+      VpcId: !Ref VPC
 
   PrivateRoute:
     Type: AWS::EC2::Route
@@ -127,7 +127,7 @@ Resources:
     Properties:
       GroupDescription: Access to the public facing load balancer
       GroupName: ALB Security Group
-      VpcId: !Ref 'VPC'
+      VpcId: !Ref VPC
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 8080
@@ -148,7 +148,7 @@ Resources:
       Scheme: internal
       LoadBalancerAttributes:
         - Key: idle_timeout.timeout_seconds
-          Value: '30'
+          Value: 30
       Subnets:
         - !Ref PrivateSubnet0
         - !Ref PrivateSubnet1
@@ -160,7 +160,7 @@ Resources:
     Properties:
       DefaultActions:
         - TargetGroupArn: !Ref ELBTargetGroupPrivate
-          Type: 'forward'
+          Type: forward
       LoadBalancerArn: !Ref PrivateLoadBalancer
       Port: 8080
       Protocol: HTTP
@@ -175,16 +175,16 @@ Resources:
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 2
       Matcher:
-        HttpCode: '200-299'
+        HttpCode: 200-299
       Port: 8080
       Protocol: HTTP
       UnhealthyThresholdCount: 10
-      VpcId: !Ref 'VPC'
+      VpcId: !Ref VPC
       TargetGroupAttributes:
         - Key: deregistration_delay.timeout_seconds
-          Value: '5'
+          Value: 5
         - Key: slow_start.duration_seconds
-          Value: '60'
+          Value: 60
 
   #================================
   #   API GW
@@ -192,7 +192,7 @@ Resources:
   HttpApiVPCLink:
     Type: AWS::ApiGatewayV2::VpcLink
     Properties:
-      Name: !Sub '${ProjectName}-VpcLink'
+      Name: !Sub ${ProjectName}-VpcLink
       SecurityGroupIds:
         - !Ref ContainerSecurityGroup
       SubnetIds:
@@ -212,23 +212,23 @@ Resources:
           /{proxy+}: # TODO: For the consistency purpose all requests should be routed to the app
                      # TODO: /hc should be excluded or hc should be hidden (rule on the ALB)
             parameters:
-              - name: "proxy+"
-                in: "path"
-                description: "catch all other requests"
+              - name: proxy+
+                in: path
+                description: catch all other requests
                 required: true
                 schema:
-                  type: "string"
+                  type: string
             x-amazon-apigateway-any-method:
               responses:
                 default:
                   $ref: '#/components/responses/NotFound'
               x-amazon-apigateway-integration:
-                payloadFormatVersion: "1.0"
+                payloadFormatVersion: 1.0
                 connectionId: !Ref HttpApiVPCLink
-                type: "http_proxy"
-                httpMethod: "GET"
+                type: http_proxy
+                httpMethod: GET
                 uri: !GetAtt PrivateLoadBalancerListener.ListenerArn
-                connectionType: "VPC_LINK"
+                connectionType: VPC_LINK
           /user/{username}/repositories:
             get:
               summary: Returns a list or repositories without forks
@@ -243,12 +243,12 @@ Resources:
                 '406':
                   $ref: '#/components/responses/NotAcceptable'
               x-amazon-apigateway-integration:
-                payloadFormatVersion: "1.0"
+                payloadFormatVersion: 1.0
                 connectionId: !Ref HttpApiVPCLink
-                type: "http_proxy"
-                httpMethod: "GET"
+                type: http_proxy
+                httpMethod: GET
                 uri: !GetAtt PrivateLoadBalancerListener.ListenerArn
-                connectionType: "VPC_LINK"
+                connectionType: VPC_LINK
         components:
           parameters:
             Accept:
@@ -325,10 +325,10 @@ Resources:
                   type: string
         # End of  Spec
   HttpApiStage:
-    Type: 'AWS::ApiGatewayV2::Stage'
+    Type: AWS::ApiGatewayV2::Stage
     Properties:
       StageName: test
-      ApiId: !Ref 'HttpApi'
+      ApiId: !Ref HttpApi
       AutoDeploy: true
 
 
@@ -342,7 +342,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Access to the Fargate containers
-      VpcId: !Ref 'VPC'
+      VpcId: !Ref VPC
 
   ContainerSecurityGroupSelfIngress:
     Type: AWS::EC2::SecurityGroupIngress
@@ -361,7 +361,7 @@ Resources:
           - Effect: Allow
             Principal:
               Service: [ ecs.amazonaws.com ]
-            Action: [ 'sts:AssumeRole' ]
+            Action: [ sts:AssumeRole ]
       Path: /
       Policies:
         - PolicyName: ecs-service
@@ -369,19 +369,19 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - 'ec2:AttachNetworkInterface'
-                  - 'ec2:CreateNetworkInterface'
-                  - 'ec2:CreateNetworkInterfacePermission'
-                  - 'ec2:DeleteNetworkInterface'
-                  - 'ec2:DeleteNetworkInterfacePermission'
-                  - 'ec2:Describe*'
-                  - 'ec2:DetachNetworkInterface'
+                  - ec2:AttachNetworkInterface
+                  - ec2:CreateNetworkInterface
+                  - ec2:CreateNetworkInterfacePermission
+                  - ec2:DeleteNetworkInterface
+                  - ec2:DeleteNetworkInterfacePermission
+                  - ec2:Describe*
+                  - ec2:DetachNetworkInterface
 
-                  - 'elasticloadbalancing:DeregisterInstancesFromLoadBalancer'
-                  - 'elasticloadbalancing:DeregisterTargets'
-                  - 'elasticloadbalancing:Describe*'
-                  - 'elasticloadbalancing:RegisterInstancesWithLoadBalancer'
-                  - 'elasticloadbalancing:RegisterTargets'
+                  - elasticloadbalancing:DeregisterInstancesFromLoadBalancer
+                  - elasticloadbalancing:DeregisterTargets
+                  - elasticloadbalancing:Describe*
+                  - elasticloadbalancing:RegisterInstancesWithLoadBalancer
+                  - elasticloadbalancing:RegisterTargets
                 Resource: '*'
 
   ECSTaskExecutionRole:
@@ -392,7 +392,7 @@ Resources:
           - Effect: Allow
             Principal:
               Service: [ ecs-tasks.amazonaws.com ]
-            Action: [ 'sts:AssumeRole' ]
+            Action: [ sts:AssumeRole ]
       Path: /
       Policies:
         - PolicyName: AmazonECSTaskExecutionRolePolicy
@@ -400,13 +400,13 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - 'ecr:GetAuthorizationToken'
-                  - 'ecr:BatchCheckLayerAvailability'
-                  - 'ecr:GetDownloadUrlForLayer'
-                  - 'ecr:BatchGetImage'
+                  - ecr:GetAuthorizationToken
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:BatchGetImage
 
-                  - 'logs:CreateLogStream'
-                  - 'logs:PutLogEvents'
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
                 Resource: '*'
 
   AppTaskRole:
@@ -417,24 +417,24 @@ Resources:
           - Effect: Allow
             Principal:
               Service: ecs-tasks.amazonaws.com
-            Action: 'sts:AssumeRole'
+            Action: sts:AssumeRole
 
   AppTaskDefinition:
-    Type: 'AWS::ECS::TaskDefinition'
+    Type: AWS::ECS::TaskDefinition
     Properties:
       TaskRoleArn: !GetAtt AppTaskRole.Arn
       RequiresCompatibilities:
         - FARGATE
       ContainerDefinitions:
-        - Name: !Sub "${ProjectName}-Container"
-          Image: 'mendhak/http-https-echo:latest'
+        - Name: !Sub ${ProjectName}-Container
+          Image: mendhak/http-https-echo:latest
           Essential: true
           PortMappings:
             - ContainerPort: 8080
               Protocol: tcp
       NetworkMode: awsvpc
-      Memory: '512'
-      Cpu: '256'
+      Memory: 512
+      Cpu: 256
 
   AppService:
     Type: AWS::ECS::Service
@@ -447,7 +447,7 @@ Resources:
       LaunchType: FARGATE
       DesiredCount: 2
       LoadBalancers:
-        - ContainerName: !Sub "${ProjectName}-Container"
+        - ContainerName: !Sub ${ProjectName}-Container
           ContainerPort: 8080
           TargetGroupArn: !Ref ELBTargetGroupPrivate
       NetworkConfiguration:
@@ -462,4 +462,4 @@ Resources:
 Outputs:
   InvokeUrl:
     Description: Invoke URL for the HTTP API
-    Value: !Sub 'https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com/test'
+    Value: !Sub https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com/test
