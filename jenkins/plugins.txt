@@ -1,0 +1,5 @@
+aws-credentials:218.v1b_e9466ec5da_
+pipeline-aws:1.43
+git:5.2.0
+workflow-aggregator:596.v8c21c963d92d
+pipeline-stage-view:2.33
