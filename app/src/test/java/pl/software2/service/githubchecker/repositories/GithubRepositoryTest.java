@@ -12,8 +12,8 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
-import static pl.software2.service.githubchecker.repositories.Fixtures.Repos.*;
-import static pl.software2.service.githubchecker.repositories.Fixtures.Users.*;
+import static pl.software2.service.githubchecker.Fixtures.Repos.*;
+import static pl.software2.service.githubchecker.Fixtures.Users.*;
 
 class GithubRepositoryTest {
 

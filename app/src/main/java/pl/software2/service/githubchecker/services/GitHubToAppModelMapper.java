@@ -10,7 +10,7 @@ import reactor.util.function.Tuple2;
 import java.util.List;
 
 @Component
-public class GitHubToExternalModelMapper {
+public class GitHubToAppModelMapper {
 
     public Repository map(Tuple2<UserRepo, List<RepoBranch>> tuple) {
         UserRepo repo = tuple.getT1();

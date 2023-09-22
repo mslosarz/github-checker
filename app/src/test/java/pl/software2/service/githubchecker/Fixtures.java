@@ -1,29 +1,32 @@
-package pl.software2.service.githubchecker.repositories;
+package pl.software2.service.githubchecker;
 
 import lombok.experimental.UtilityClass;
 import org.jetbrains.annotations.NotNull;
+import pl.software2.service.githubchecker.model.Branch;
+import pl.software2.service.githubchecker.model.Repository;
 import pl.software2.service.githubchecker.model.github.BranchCommit;
 import pl.software2.service.githubchecker.model.github.RepoBranch;
 import pl.software2.service.githubchecker.model.github.RepoOwner;
 import pl.software2.service.githubchecker.model.github.UserRepo;
 
 import java.io.IOException;
+import java.util.List;
 
 import static java.util.Objects.requireNonNull;
 
 @UtilityClass
-class Fixtures {
+public class Fixtures {
 
-    class Users {
-        public static String withOneRepo(){
+    public class Users {
+        public static String withOneRepo() {
             return loadResource("github/users_single_repo.json");
         }
 
-        public static String withTwoRepos(){
+        public static String withTwoRepos() {
             return loadResource("github/users_two_repos.json");
         }
 
-        public static String notFound(){
+        public static String notFound() {
             return loadResource("github/user_not_found.json");
         }
 
@@ -48,16 +51,16 @@ class Fixtures {
         }
     }
 
-    class Repos {
-        public static String withSingleBranch(){
+    public class Repos {
+        public static String withSingleBranch() {
             return loadResource("github/repos_single_branch.json");
         }
 
-        public static String withTwoBranches(){
+        public static String withTwoBranches() {
             return loadResource("github/repos_two_branches.json");
         }
 
-        public static RepoBranch expectedFirstBranch(){
+        public static RepoBranch expectedFirstBranch() {
             return RepoBranch.builder()
                     .name("master")
                     .commit(BranchCommit.builder()
@@ -66,13 +69,21 @@ class Fixtures {
                     .build();
         }
 
-        public static RepoBranch expectedSecondBranch(){
+        public static RepoBranch expectedSecondBranch() {
             return RepoBranch.builder()
                     .name("test")
                     .commit(BranchCommit.builder()
                             .sha("c5co1ja1robie1tuu2uu1uuu5df71a34c7fbeeda2479ccbc")
                             .build())
                     .build();
+        }
+    }
+
+    public class AppModel {
+        public static Repository expectedFirstRepositoryWithFirstBranch() {
+            return new Repository("shade", "dzik", List.of(
+                    new Branch("master", "c5b97d5ae6c19d5c5df71a34c7fbeeda2479ccbc")
+            ));
         }
     }
 
