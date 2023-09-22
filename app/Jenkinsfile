@@ -1,8 +1,8 @@
 pipeline {
     agent any
     tools {
-        maven 'Maven 3.3.9'
         jdk 'jdk17'
+        maven 'maven3'
     }
     stages {
         stage('Build') {
@@ -20,10 +20,6 @@ pipeline {
                     junit 'target/surefire-reports/**/*.xml'
                 }
             }
-        }
-
-        stage('Build docker') {
-
         }
     }
 }

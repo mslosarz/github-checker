@@ -5,3 +5,9 @@
 - `jenkins` - holds all stuff connected with CI/CD (jenkins localhost)
 - `infra` - it has swagger api + cloudformation definition 
   - cfn should be split into the stacks representing layers like, networking, balancing, application
+- `app` - the code of the challenge
+  - to run immediately:
+    - `mvn clean package && java -jar target/github-checker-0.0.1-SNAPSHOT.jar --spring.webflux.base-path=/test --github.key=<your github key>`
+  - github key can be also placed in the application.properties
+  - to test it:
+    - `curl -v http://localhost:8080/test/user/mslosarz/repositories`

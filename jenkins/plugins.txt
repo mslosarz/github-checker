@@ -3,3 +3,4 @@ pipeline-aws:1.43
 git:5.2.0
 workflow-aggregator:596.v8c21c963d92d
 pipeline-stage-view:2.33
+pipeline-maven:1342.vfc697b_789147
