@@ -40,6 +40,16 @@ public class Fixtures {
                     .build();
         }
 
+        public static UserRepo expectedForkRepository() {
+            return UserRepo.builder()
+                    .name("fork")
+                    .fork(true)
+                    .owner(RepoOwner.builder()
+                            .login("dzik")
+                            .build())
+                    .build();
+        }
+
         public static UserRepo expectedSecondRepository() {
             return UserRepo.builder()
                     .name("shade2")
