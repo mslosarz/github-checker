@@ -1,7 +1,6 @@
 package pl.software2.service.githubchecker.repositories;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Repository;
@@ -26,18 +25,9 @@ public class GithubRepository {
     };
     private final WebClient webClient;
 
-    GithubRepository(WebClient webClient) {
-        this.webClient = webClient;
-    }
-
     @Autowired
-    public GithubRepository(@Value("${github.key}") String githubKey) {
-        webClient = WebClient.builder()
-                .baseUrl("https://api.github.com/")
-                .defaultHeader("Accept", "application/vnd.github+json")
-                .defaultHeader("Authorization", "Bearer " + githubKey)
-                .defaultHeader("X-GitHub-Api-Version", "2022-11-28")
-                .build();
+    public GithubRepository(WebClient.Builder builder) {
+        this.webClient = builder.build();
     }
 
     public Mono<List<UserRepo>> getUserRepositories(String username) {

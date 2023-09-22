@@ -142,6 +142,6 @@ class GithubRepositoryTest {
     }
 
     private GithubRepository repository() {
-        return new GithubRepository(WebClient.builder().baseUrl(mockWebServer.url("/").toString()).build());
+        return new GithubRepository(WebClient.builder().baseUrl(mockWebServer.url("/").toString()));
     }
 }
