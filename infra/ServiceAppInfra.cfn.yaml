@@ -209,26 +209,6 @@ Resources:
           description: Simple API to check user repositories
           version: 0.0.1
         paths:
-          /{proxy+}: # TODO: For the consistency purpose all requests should be routed to the app
-                     # TODO: /hc should be excluded or hc should be hidden (rule on the ALB)
-            parameters:
-              - name: proxy+
-                in: path
-                description: catch all other requests
-                required: true
-                schema:
-                  type: string
-            x-amazon-apigateway-any-method:
-              responses:
-                default:
-                  $ref: '#/components/responses/NotFound'
-              x-amazon-apigateway-integration:
-                payloadFormatVersion: 1.0
-                connectionId: !Ref HttpApiVPCLink
-                type: http_proxy
-                httpMethod: GET
-                uri: !GetAtt PrivateLoadBalancerListener.ListenerArn
-                connectionType: VPC_LINK
           /user/{username}/repositories:
             get:
               summary: Returns a list or repositories without forks
