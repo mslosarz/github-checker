@@ -2,22 +2,40 @@ pipeline {
     agent any
     tools {
         jdk 'jdk17'
-        maven 'maven3'
+        maven 'mvn3'
+    }
+    parameters {
+        string(name: 'STACK_NAME', defaultValue: 'demo-stack')
+        string(name: 'PROJECT_NAME', defaultValue: 'github-checker')
     }
     stages {
         stage('Build') {
             steps {
-                sh 'mvn clean package -DskipTests'
+                sh 'mvn clean package -DskipTests -f app/pom.xml'
             }
         }
 
         stage('Test') {
             steps {
-                sh 'mvn test'
+                sh 'mvn test -f app/pom.xml'
             }
             post {
-                success {
-                    junit 'target/surefire-reports/**/*.xml'
+                always {
+                    junit 'app/target/surefire-reports/**/*.xml'
+                }
+            }
+        }
+
+        stage('Deploy Infra') {
+            steps {
+                timeout(time: 1, unit: 'HOUR') {
+                    withAWS(credentials: 'default', region: 'eu-west-1') {
+                        cfnUpdate(
+                                stack: "${params.STACK_NAME}",
+                                file: 'infra/ServiceAppInfra.cfn.yaml',
+                                params: ['ProjectName': "${params.PROJECT_NAME}"]
+                        )
+                    }
                 }
             }
         }
