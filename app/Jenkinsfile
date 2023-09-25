@@ -8,6 +8,9 @@ pipeline {
         string(name: 'STACK_NAME', defaultValue: 'demo-stack')
         string(name: 'PROJECT_NAME', defaultValue: 'github-checker')
     }
+    options {
+        timeout(time: 1, unit: 'HOURS')
+    }
     stages {
         stage('Build') {
             steps {
@@ -28,12 +31,44 @@ pipeline {
 
         stage('Deploy Infra') {
             steps {
-                timeout(time: 1, unit: 'HOUR') {
+                withAWS(credentials: 'default', region: 'eu-west-1') {
+                    cfnUpdate(
+                            stack: "${params.STACK_NAME}",
+                            file: 'infra/ServiceAppInfra.cfn.yaml',
+                            params: ['ProjectName': "${params.PROJECT_NAME}"]
+                    )
+                }
+            }
+        }
+
+        stage('Build App Version & Deploy') {
+            steps {
+                script {
                     withAWS(credentials: 'default', region: 'eu-west-1') {
+                        stackOutput = cfnDescribe(
+                                stack: "${params.STACK_NAME}"
+                        )
+
+                        loginRepository = sh script: "echo ${stackOutput.EcrRepositoryUrl} | cut -f1 -d\"/\"", returnStdout: true
+                        sh "aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin ${loginRepository}"
+
+                        versionNumber = currentBuild.number
+                        sh """
+                               
+                               echo "BUILDING IMAGE ${versionNumber}"
+                               cd app || exit
+                               docker build -t "github-checker:${versionNumber}" .
+                               cd .. || exit
+                           """
+
+                        sh "docker tag github-checker:${versionNumber} ${stackOutput.EcrRepositoryUrl}:${versionNumber}"
+                        sh "docker push ${stackOutput.EcrRepositoryUrl}:${versionNumber}"
+
                         cfnUpdate(
                                 stack: "${params.STACK_NAME}",
                                 file: 'infra/ServiceAppInfra.cfn.yaml',
-                                params: ['ProjectName': "${params.PROJECT_NAME}"]
+                                keepParams: ['ProjectName'],
+                                params: ['DockerImage': "${stackOutput.EcrRepositoryUrl}:${versionNumber}"]
                         )
                     }
                 }
