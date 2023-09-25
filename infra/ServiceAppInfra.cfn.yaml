@@ -6,6 +6,9 @@ Parameters:
   ProjectName:
     Type: String
     Default: demoapp
+  DockerImage:
+    Type: String
+    Default: mendhak/http-https-echo:latest
 
 Mappings:
   SubnetConfig:
@@ -23,7 +26,6 @@ Resources:
   #================================
   #   VPC
   #================================
-
   VPC:
     Type: AWS::EC2::VPC
     Properties:
@@ -167,6 +169,8 @@ Resources:
 
   ELBTargetGroupPrivate:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    DependsOn:
+      - PrivateLoadBalancer
     Properties:
       TargetType: ip
       HealthCheckIntervalSeconds: 10
@@ -315,6 +319,17 @@ Resources:
   #================================
   #   ECS
   #================================
+  ECRRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Sub ${ProjectName}-repository
+
+  GitHubKey:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Description: GitHub api token
+      Name: !Sub ${ProjectName}-github-key
+
   ECSCluster:
     Type: AWS::ECS::Cluster
 
@@ -388,6 +403,10 @@ Resources:
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                 Resource: '*'
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource: !Ref GitHubKey
 
   AppTaskRole:
     Type: AWS::IAM::Role
@@ -403,15 +422,19 @@ Resources:
     Type: AWS::ECS::TaskDefinition
     Properties:
       TaskRoleArn: !GetAtt AppTaskRole.Arn
+      ExecutionRoleArn: !GetAtt ECSTaskExecutionRole.Arn
       RequiresCompatibilities:
         - FARGATE
       ContainerDefinitions:
         - Name: !Sub ${ProjectName}-Container
-          Image: mendhak/http-https-echo:latest
+          Image: !Ref DockerImage
           Essential: true
           PortMappings:
             - ContainerPort: 8080
               Protocol: tcp
+          Secrets:
+            - Name: github.key
+              ValueFrom: !Ref GitHubKey
       NetworkMode: awsvpc
       Memory: 512
       Cpu: 256
@@ -443,3 +466,5 @@ Outputs:
   InvokeUrl:
     Description: Invoke URL for the HTTP API
     Value: !Sub https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com/test
+  EcrRepositoryUrl:
+    Value: !GetAtt ECRRepository.RepositoryUri
