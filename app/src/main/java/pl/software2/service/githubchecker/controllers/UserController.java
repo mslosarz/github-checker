@@ -9,7 +9,7 @@ import pl.software2.service.githubchecker.model.Repository;
 import pl.software2.service.githubchecker.services.UserService;
 import reactor.core.publisher.Flux;
 
-@RestController("/")
+@RestController
 public class UserController {
 
     private final UserService service;

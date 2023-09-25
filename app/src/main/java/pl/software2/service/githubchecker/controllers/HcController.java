@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
-@RestController("/")
+@RestController("/hc")
 public class HcController {
 
 
@@ -14,7 +14,7 @@ public class HcController {
     private HcController() {
     }
 
-    @GetMapping(value = "/hc", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public Mono<String> getUserRepositories() {
         return Mono.just("Ok");
     }
