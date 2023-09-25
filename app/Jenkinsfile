@@ -35,6 +35,7 @@ pipeline {
                     cfnUpdate(
                             stack: "${params.STACK_NAME}",
                             file: 'infra/ServiceAppInfra.cfn.yaml',
+                            keepParams: ['DockerImage'],
                             params: ['ProjectName': "${params.PROJECT_NAME}"]
                     )
                 }
