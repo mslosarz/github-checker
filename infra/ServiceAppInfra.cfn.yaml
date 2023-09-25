@@ -9,6 +9,9 @@ Parameters:
   DockerImage:
     Type: String
     Default: mendhak/http-https-echo:latest
+  StageName:
+    Type: String
+    Default: test
 
 Mappings:
   SubnetConfig:
@@ -174,7 +177,7 @@ Resources:
     Properties:
       TargetType: ip
       HealthCheckIntervalSeconds: 10
-      HealthCheckPath: /hc
+      HealthCheckPath: !Sub /${StageName}/hc
       HealthCheckProtocol: HTTP
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 2
@@ -311,7 +314,7 @@ Resources:
   HttpApiStage:
     Type: AWS::ApiGatewayV2::Stage
     Properties:
-      StageName: test
+      StageName: !Ref StageName
       ApiId: !Ref HttpApi
       AutoDeploy: true
 
@@ -435,6 +438,9 @@ Resources:
           Secrets:
             - Name: github.key
               ValueFrom: !Ref GitHubKey
+          Environment:
+            - Name: spring.webflux.base-path
+              Value: !Sub /${StageName}
       NetworkMode: awsvpc
       Memory: 512
       Cpu: 256
@@ -465,6 +471,6 @@ Resources:
 Outputs:
   InvokeUrl:
     Description: Invoke URL for the HTTP API
-    Value: !Sub https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com/test
+    Value: !Sub https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com/${StageName}
   EcrRepositoryUrl:
     Value: !GetAtt ECRRepository.RepositoryUri
